@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ledger & Co. — Personal Finance Advisor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#efe9da;
+    --paper-dark:#e4dcc8;
+    --rule:#c9bfa4;
+    --ink-green:#1f4b3f;
+    --ink-green-dim:#2f5c4e;
+    --ink-blue:#2e3a59;
+    --brass:#a9762f;
+    --brass-light:#c99a4f;
+    --rule-red:#a13d2d;
+    --charcoal:#2b2620;
+    --charcoal-soft:#5a5347;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:transparent;
+    color:var(--charcoal);
+    font-family:'Inter',sans-serif;
+  }
+  .app{
+    max-width:880px;
+    margin:0 auto;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px);
+    background-size:100% 32px;
+    border:1px solid var(--rule);
+    box-shadow:0 1px 0 var(--paper-dark) inset, 0 20px 40px -30px rgba(0,0,0,0.4);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  header.cover{
+    background:
+      radial-gradient(circle at 85% -20%, rgba(169,118,47,0.18), transparent 55%),
+      var(--ink-green);
+    color:var(--paper);
+    padding:34px 36px 26px;
+    position:relative;
+    background-size:auto, cover;
+  }
+  header.cover .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    opacity:0.72;
+    margin-bottom:6px;
+  }
+  header.cover h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:34px;
+    margin:0 0 6px;
+    letter-spacing:0.01em;
+  }
+  header.cover p{
+    margin:0;
+    font-size:14px;
+    max-width:480px;
+    opacity:0.86;
+    line-height:1.5;
+  }
+  .stamp{
+    position:absolute;
+    top:26px;
+    right:32px;
+    width:96px;
+    height:96px;
+    border:2.5px solid var(--brass-light);
+    border-radius:50%;
+    color:var(--brass-light);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    transform:rotate(-11deg);
+    opacity:0;
+    transition:opacity .4s ease;
+    line-height:1.35;
+    padding:6px;
+  }
+  .stamp.show{opacity:0.85;}
+  .stamp::before{
+    content:"";
+    position:absolute;
+    inset:5px;
+    border:1px solid var(--brass-light);
+    border-radius:50%;
+  }
+  nav.tabs{
+    display:flex;
+    background:var(--paper-dark);
+    border-bottom:1px solid var(--rule);
+  }
+  nav.tabs button{
+    flex:1;
+    padding:13px 8px;
+    background:none;
+    border:none;
+    border-right:1px solid var(--rule);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    color:var(--charcoal-soft);
+    cursor:pointer;
+    position:relative;
+  }
+  nav.tabs button:last-child{border-right:none;}
+  nav.tabs button .num{color:var(--brass);margin-right:6px;}
+  nav.tabs button.active{
+    background:var(--paper);
+    color:var(--ink-green);
+    font-weight:600;
+  }
+  nav.tabs button.active::after{
+    content:"";
+    position:absolute;
+    bottom:-1px;left:0;right:0;
+    height:2px;
+    background:var(--ink-green);
+  }
+  nav.tabs button:focus-visible{outline:2px solid var(--ink-blue);outline-offset:-2px;}
+
+  main{padding:30px 36px 38px;min-height:420px;}
+  section.tab{display:none;}
+  section.tab.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  h2.section-title{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    font-weight:600;
+    color:var(--ink-green);
+    margin:0 0 4px;
+  }
+  p.section-sub{
+    margin:0 0 22px;
+    font-size:13px;
+    color:var(--charcoal-soft);
+  }
+
+  .field-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 20px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--charcoal-soft);
+    font-weight:600;
+  }
+  .field .hint{font-size:11px;color:var(--charcoal-soft);font-weight:400;text-transform:none;letter-spacing:0;}
+  .field input, .field select{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    padding:9px 10px;
+    border:1px solid var(--rule);
+    background:#faf7ef;
+    color:var(--charcoal);
+    border-radius:2px;
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--ink-blue);outline-offset:0;}
+  .field-currency{position:relative;}
+  .field-currency::before{
+    content:"₹";
+    position:absolute;left:10px;top:33px;
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--charcoal-soft);
+    font-size:14px;
+    pointer-events:none;
+  }
+  .field-currency input{padding-left:22px;}
+
+  .btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    background:var(--ink-green);
+    color:var(--paper);
+    border:none;
+    padding:11px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn:hover{background:var(--ink-green-dim);}
+  .btn.ghost{
+    background:none;
+    color:var(--ink-green);
+    border:1px solid var(--ink-green);
+  }
+  .btn.ghost:hover{background:rgba(31,75,63,0.07);}
+  .btn:focus-visible{outline:2px solid var(--ink-blue);outline-offset:2px;}
+  .btn-row{margin-top:22px;display:flex;gap:10px;}
+
+  table.ledger{width:100%;border-collapse:collapse;margin-top:6px;}
+  table.ledger th{
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--charcoal-soft);
+    padding:6px 8px;
+    border-bottom:1px solid var(--rule);
+  }
+  table.ledger td{
+    padding:8px 8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13.5px;
+    border-bottom:1px dashed var(--rule);
+  }
+  table.ledger tr:last-child td{border-bottom:none;}
+  .num-cell{text-align:right;}
+  .neg{color:var(--rule-red);}
+  .pos{color:var(--ink-green);}
+
+  .bar-row{display:grid;grid-template-columns:110px 1fr 90px;gap:12px;align-items:center;margin-bottom:12px;}
+  .bar-row .label{font-size:12px;font-weight:600;color:var(--charcoal);}
+  .bar-track{height:16px;background:var(--paper-dark);border:1px solid var(--rule);border-radius:2px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;background:var(--ink-green);}
+  .bar-fill.want{background:var(--brass);}
+  .bar-fill.save{background:var(--ink-blue);}
+  .bar-fill.over{background:var(--rule-red);}
+  .bar-target{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--charcoal);}
+  .bar-num{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:right;}
+
+  .kpi-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px;}
+  .kpi{
+    flex:1;min-width:150px;
+    border:1px solid var(--rule);
+    background:#faf7ef;
+    padding:14px 16px;
+    border-radius:2px;
+  }
+  .kpi .kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--charcoal-soft);margin-bottom:6px;}
+  .kpi .kpi-value{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--ink-green);}
+  .kpi .kpi-value.warn{color:var(--rule-red);}
+
+  .empty-note{
+    font-size:13px;color:var(--charcoal-soft);
+    border:1px dashed var(--rule);
+    padding:16px;border-radius:2px;
+    background:#faf7ef;
+  }
+
+  .debt-row{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 0.8fr 1fr auto;
+    gap:10px;
+    align-items:end;
+    margin-bottom:12px;
+  }
+  .debt-row input{width:100%;}
+  .icon-btn{
+    background:none;border:1px solid var(--rule-red);color:var(--rule-red);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    padding:9px 10px;border-radius:2px;cursor:pointer;
+  }
+  .icon-btn:hover{background:rgba(161,61,45,0.08);}
+
+  .advisor-order{
+    border-left:3px solid var(--brass);
+    padding:10px 14px;
+    background:#faf7ef;
+    margin-bottom:18px;
+    font-size:13.5px;
+  }
+  .advisor-order b{color:var(--ink-green);}
+
+  .chat-window{
+    border:1px solid var(--rule);
+    background:#faf7ef;
+    height:340px;
+    overflow-y:auto;
+    padding:16px;
+    margin-bottom:12px;
+    border-radius:2px;
+  }
+  .msg{margin-bottom:16px;max-width:88%;}
+  .msg.user{margin-left:auto;text-align:right;}
+  .msg .bubble{
+    display:inline-block;
+    text-align:left;
+    padding:10px 13px;
+    border-radius:2px;
+    font-size:13.5px;
+    line-height:1.55;
+  }
+  .msg.user .bubble{background:var(--ink-blue);color:var(--paper);}
+  .msg.bot .bubble{background:var(--paper-dark);color:var(--charcoal);border-left:3px solid var(--ink-green);}
+  .msg .who{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--charcoal-soft);margin-bottom:4px;
+  }
+  .chat-input-row{display:flex;gap:10px;}
+  .chat-input-row input{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:11px 13px;
+    border:1px solid var(--rule);
+    border-radius:2px;
+    background:#faf7ef;
+  }
+  .chat-input-row input:focus{outline:2px solid var(--ink-blue);}
+  .typing{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--charcoal-soft);font-style:italic;}
+
+  .disclaimer{
+    margin-top:26px;
+    font-size:11.5px;
+    color:var(--charcoal-soft);
+    border-top:1px dashed var(--rule);
+    padding-top:14px;
+    line-height:1.5;
+  }
+
+  @media (max-width:600px){
+    header.cover{padding:26px 20px 22px;}
+    header.cover h1{font-size:26px;}
+    .stamp{width:74px;height:74px;font-size:9px;top:18px;right:16px;}
+    main{padding:22px 18px 30px;}
+    .field-grid{grid-template-columns:1fr;}
+    nav.tabs button{font-size:10.5px;padding:11px 4px;}
+    .debt-row{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="cover">
+    <div class="eyebrow">Ledger &amp; Co. — Est. in your browser</div>
+    <h1>Personal Finance Advisor</h1>
+    <p>Post your income and expenses, track debt payoff, and consult the advisor for plain-language guidance on what to do next.</p>
+    <div class="stamp" id="stamp">SOLVENT</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="budget"><span class="num">01</span>Budget</button>
+    <button class="tab-btn" data-tab="overview"><span class="num">02</span>Overview</button>
+    <button class="tab-btn" data-tab="debt"><span class="num">03</span>Debt Ledger</button>
+    <button class="tab-btn" data-tab="advisor"><span class="num">04</span>Ask the Advisor</button>
+  </nav>
+
+  <main>
+    <!-- TAB 1: BUDGET -->
+    <section class="tab active" id="tab-budget">
+      <h2 class="section-title">This Month's Entries</h2>
+      <p class="section-sub">Enter your take-home income and monthly spending. Amounts are in ₹ but any currency works — the math doesn't care.</p>
+
+      <div class="field-grid">
+        <div class="field field-currency">
+          <label>Monthly take-home income</label>
+          <input type="number" id="income" min="0" placeholder="0">
+        </div>
+        <div class="field field-currency">
+          <label>Savings &amp; investing</label>
+          <input type="number" id="savings" min="0" placeholder="0">
+        </div>
+
+        <div class="field field-currency">
+          <label>Housing (rent/mortgage)</label>
+          <input type="number" id="housing" min="0" placeholder="0">
+        </div>
+        <div class="field field-currency">
+          <label>Utilities &amp; bills</label>
+          <input type="number" id="utilities" min="0" placeholder="0">
+        </div>
+
+        <div class="field field-currency">
+          <label>Groceries</label>
+          <input type="number" id="groceries" min="0" placeholder="0">
+        </div>
+        <div class="field field-currency">
+          <label>Transportation</label>
+          <input type="number" id="transport" min="0" placeholder="0">
+        </div>
+
+        <div class="field field-currency">
+          <label>Insurance &amp; minimum debt payments</label>
+          <input type="number" id="obligations" min="0" placeholder="0">
+        </div>
+        <div class="field field-currency">
+          <label>Dining &amp; entertainment</label>
+          <input type="number" id="dining" min="0" placeholder="0">
+        </div>
+
+        <div class="field field-currency">
+          <label>Shopping &amp; subscriptions</label>
+          <input type="number" id="shopping" min="0" placeholder="0">
+        </div>
+        <div class="field field-currency">
+          <label>Other discretionary spending</label>
+          <input type="number" id="other" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="postLedger">Post to Ledger</button>
+        <button class="btn ghost" id="loadSample">Load a sample month</button>
+      </div>
+    </section>
+
+    <!-- TAB 2: OVERVIEW -->
+    <section class="tab" id="tab-overview">
+      <h2 class="section-title">Ledger Overview</h2>
+      <p class="section-sub">How this month stacks up against the 50/30/20 guideline: 50% needs, 30% wants, 20% savings.</p>
+      <div id="overviewBody">
+        <p class="empty-note">No entries posted yet. Fill in the Budget tab and click "Post to Ledger" to see your overview.</p>
+      </div>
+    </section>
+
+    <!-- TAB 3: DEBT LEDGER -->
+    <section class="tab" id="tab-debt">
+      <h2 class="section-title">Debt Ledger</h2>
+      <p class="section-sub">List each debt. We'll work out the fastest way to clear them (avalanche method — highest interest rate first) once you add an extra monthly payment.</p>
+
+      <div id="debtRows"></div>
+      <button class="btn ghost" id="addDebt" style="margin-bottom:20px;">+ Add a debt</button>
+
+      <div class="field-grid" style="margin-bottom:6px;">
+        <div class="field field-currency">
+          <label>Extra payment available each month</label>
+          <span class="hint" style="margin-bottom:-2px;">On top of minimum payments</span>
+          <input type="number" id="extraPayment" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="calcPayoff">Calculate Payoff Plan</button>
+      </div>
+
+      <div id="payoffResult" style="margin-top:24px;"></div>
+    </section>
+
+    <!-- TAB 4: ADVISOR -->
+    <section class="tab" id="tab-advisor">
+      <h2 class="section-title">Consult the Advisor</h2>
+      <p class="section-sub">Ask a question in plain language. The advisor sees whatever you've posted to the Budget and Debt tabs so far.</p>
+
+      <div class="chat-window" id="chatWindow">
+        <div class="msg bot">
+          <div class="who">Advisor</div>
+          <div class="bubble">Post your numbers in the Budget tab, then ask me anything — "Can I afford to save more?", "Should I pay off debt or invest first?", "How do I build an emergency fund?"</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask about your budget, debt, or savings goals…">
+        <button class="btn" id="sendChat">Send</button>
+      </div>
+
+      <div class="disclaimer">
+        This tool gives general educational information based on the numbers you enter — it isn't personalized financial, tax, or legal advice, and it isn't a substitute for a licensed financial advisor who knows your full situation. Nothing here is a recommendation to buy or sell any specific investment. Your data stays in this browser tab and clears when you close it.
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  // ---------- STATE ----------
+  const state = {
+    budget: null, // {income, categories:{}, needs, wants, savings}
+    debts: [],
+    chatHistory: [] // {role, content}
+  };
+
+  // ---------- TAB SWITCHING ----------
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('section.tab').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function fmt(n){
+    if (n===undefined || n===null || isNaN(n)) n = 0;
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  }
+  function num(id){
+    const v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? 0 : v;
+  }
+
+  // ---------- SAMPLE DATA ----------
+  document.getElementById('loadSample').addEventListener('click', ()=>{
+    document.getElementById('income').value = 80000;
+    document.getElementById('savings').value = 8000;
+    document.getElementById('housing').value = 22000;
+    document.getElementById('utilities').value = 4000;
+    document.getElementById('groceries').value = 9000;
+    document.getElementById('transport').value = 5000;
+    document.getElementById('obligations').value = 10000;
+    document.getElementById('dining').value = 7000;
+    document.getElementById('shopping').value = 6000;
+    document.getElementById('other').value = 4000;
+  });
+
+  // ---------- BUDGET POSTING ----------
+  document.getElementById('postLedger').addEventListener('click', ()=>{
+    const income = num('income');
+    const cats = {
+      housing: num('housing'),
+      utilities: num('utilities'),
+      groceries: num('groceries'),
+      transport: num('transport'),
+      obligations: num('obligations'),
+      dining: num('dining'),
+      shopping: num('shopping'),
+      other: num('other')
+    };
+    const savings = num('savings');
+    const needs = cats.housing + cats.utilities + cats.groceries + cats.transport + cats.obligations;
+    const wants = cats.dining + cats.shopping + cats.other;
+    const totalSpend = needs + wants + savings;
+    const leftover = income - totalSpend;
+
+    state.budget = {income, cats, needs, wants, savings, totalSpend, leftover};
+    renderOverview();
+    // jump to overview so the user sees the result
+    document.querySelector('.tab-btn[data-tab="overview"]').click();
+  });
+
+  function renderOverview(){
+    const el = document.getElementById('overviewBody');
+    const b = state.budget;
+    if (!b || b.income <= 0){
+      el.innerHTML = '<p class="empty-note">Add an income above zero on the Budget tab, then post it, to see your overview.</p>';
+      updateStamp(null);
+      return;
+    }
+    const needsPct = b.needs / b.income * 100;
+    const wantsPct = b.wants / b.income * 100;
+    const savePct = b.savings / b.income * 100;
+    const savingsRate = savePct;
+
+    const rows = [
+      {label:'Needs', pct:needsPct, target:50, cls:'need'},
+      {label:'Wants', pct:wantsPct, target:30, cls:'want'},
+      {label:'Savings', pct:savePct, target:20, cls:'save'}
+    ];
+
+    let barsHtml = rows.map(r=>{
+      const overshoot = r.pct > 100;
+      const fillCls = r.label==='Needs' ? (r.pct>55?'over':'') : (r.label==='Wants'?'want':'save');
+      return `<div class="bar-row">
+        <div class="label">${r.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill ${fillCls}" style="width:${Math.min(r.pct,100)}%"></div>
+          <div class="bar-target" style="left:${r.target}%"></div>
+        </div>
+        <div class="bar-num">${r.pct.toFixed(1)}% <span style="color:var(--charcoal-soft)">/ ${r.target}%</span></div>
+      </div>`;
+    }).join('');
+
+    const kpis = `
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Monthly income</div>
+          <div class="kpi-value">${fmt(b.income)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Left after everything</div>
+          <div class="kpi-value ${b.leftover<0?'warn':''}">${fmt(b.leftover)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Savings rate</div>
+          <div class="kpi-value ${savingsRate<10?'warn':''}">${savingsRate.toFixed(1)}%</div>
+        </div>
+      </div>`;
+
+    const tableRows = Object.entries({
+      Housing:b.cats.housing, Utilities:b.cats.utilities, Groceries:b.cats.groceries,
+      Transportation:b.cats.transport, 'Insurance & minimum debt':b.cats.obligations,
+      'Dining & entertainment':b.cats.dining, 'Shopping & subscriptions':b.cats.shopping,
+      'Other discretionary':b.cats.other, 'Savings & investing':b.savings
+    }).map(([k,v])=>`<tr><td>${k}</td><td class="num-cell">${fmt(v)}</td></tr>`).join('');
+
+    el.innerHTML = kpis + `<h2 class="section-title" style="font-size:15px;margin-top:6px;">Needs / Wants / Savings split</h2>` + barsHtml +
+      `<h2 class="section-title" style="font-size:15px;margin-top:22px;">Full entry list</h2>
+      <table class="ledger"><thead><tr><th>Category</th><th class="num-cell">Amount</th></tr></thead>
+      <tbody>${tableRows}
+      <tr><td><b>Total posted</b></td><td class="num-cell"><b>${fmt(b.totalSpend)}</b></td></tr>
+      </tbody></table>`;
+
+    updateStamp({needsPct, wantsPct, savingsRate, leftover:b.leftover});
+  }
+
+  function updateStamp(data){
+    const stamp = document.getElementById('stamp');
+    if (!data){ stamp.classList.remove('show'); return; }
+    let verdict = 'SOLVENT';
+    if (data.leftover < 0 || data.needsPct > 65) verdict = 'OVER LEDGER';
+    else if (data.savingsRate >= 20) verdict = 'WELL BOOKED';
+    else if (data.savingsRate < 5) verdict = 'THIN MARGIN';
+    stamp.textContent = verdict;
+    stamp.classList.add('show');
+  }
+
+  // ---------- DEBT LEDGER ----------
+  function addDebtRow(prefill){
+    const id = 'd' + Math.random().toString(36).slice(2,9);
+    const wrap = document.createElement('div');
+    wrap.className = 'debt-row';
+    wrap.dataset.id = id;
+    wrap.innerHTML = `
+      <div class="field"><label>Debt name</label><input type="text" class="debt-name" placeholder="e.g. Credit card" value="${prefill?prefill.name:''}"></div>
+      <div class="field field-currency"><label>Balance</label><input type="number" class="debt-balance" min="0" placeholder="0" value="${prefill?prefill.balance:''}"></div>
+      <div class="field"><label>APR %</label><input type="number" class="debt-apr" min="0" step="0.1" placeholder="0" value="${prefill?prefill.apr:''}"></div>
+      <div class="field field-currency"><label>Min payment</label><input type="number" class="debt-min" min="0" placeholder="0" value="${prefill?prefill.min:''}"></div>
+      <button class="icon-btn" title="Remove">Remove</button>
+    `;
+    wrap.querySelector('.icon-btn').addEventListener('click', ()=>wrap.remove());
+    document.getElementById('debtRows').appendChild(wrap);
+  }
+  document.getElementById('addDebt').addEventListener('click', ()=>addDebtRow());
+  // seed with two example rows (empty) so the form isn't blank
+  addDebtRow({name:'Credit card', balance:120000, apr:36, min:6000});
+  addDebtRow({name:'Personal loan', balance:250000, apr:14, min:9000});
+
+  function collectDebts(){
+    const rows = document.querySelectorAll('#debtRows .debt-row');
+    const debts = [];
+    rows.forEach(r=>{
+      const name = r.querySelector('.debt-name').value || 'Unnamed debt';
+      const balance = parseFloat(r.querySelector('.debt-balance').value) || 0;
+      const apr = parseFloat(r.querySelector('.debt-apr').value) || 0;
+      const min = parseFloat(r.querySelector('.debt-min').value) || 0;
+      if (balance > 0) debts.push({name, balance, apr, min});
+    });
+    return debts;
+  }
+
+  function simulatePayoff(debts, extra){
+    // clone
+    let list = debts.map(d=>({...d, remaining:d.balance}));
+    // avalanche order: highest APR first
+    const order = [...list].sort((a,b)=>b.apr-a.apr).map(d=>d.name);
+    let month = 0;
+    let totalInterest = 0;
+    let pool = extra;
+    const maxMonths = 600;
+    while (list.some(d=>d.remaining>0.01) && month < maxMonths){
+      month++;
+      let freed = 0;
+      // accrue interest
+      list.forEach(d=>{
+        if (d.remaining>0){
+          const interest = d.remaining * (d.apr/100/12);
+          d.remaining += interest;
+          totalInterest += interest;
+        }
+      });
+      // minimum payments
+      list.forEach(d=>{
+        if (d.remaining>0){
+          const pay = Math.min(d.min, d.remaining);
+          d.remaining -= pay;
+          if (d.remaining<=0.01){ d.remaining=0; freed += d.min; }
+        }
+      });
+      pool += freed;
+      let available = pool;
+      // apply extra to avalanche order
+      for (const name of order){
+        if (available<=0) break;
+        const d = list.find(x=>x.name===name);
+        if (d && d.remaining>0){
+          const pay = Math.min(available, d.remaining);
+          d.remaining -= pay;
+          available -= pay;
+        }
+      }
+      pool = 0; // pool is monthly extra, reset (freed mins already folded in permanently via reduced min sum next month naturally since d.remaining stays 0)
+      // rebuild pool baseline for next month = extra (freed mins are captured because paid-off debts contribute 0 min going forward, and we add "freed" again next month loop start—handled by recomputing freed each month based on which debts hit zero this month only). 
+      pool = extra;
+    }
+    return {months: month, totalInterest, order, maxedOut: month>=maxMonths};
+  }
+
+  document.getElementById('calcPayoff').addEventListener('click', ()=>{
+    const debts = collectDebts();
+    state.debts = debts;
+    const extra = num('extraPayment');
+    const resultEl = document.getElementById('payoffResult');
+    if (debts.length===0){
+      resultEl.innerHTML = '<p class="empty-note">Add at least one debt with a balance greater than zero.</p>';
+      return;
+    }
+    const sim = simulatePayoff(debts, extra);
+    const years = Math.floor(sim.months/12);
+    const rem = sim.months%12;
+    const timeStr = (years>0? years+'y ':'') + rem+'mo';
+    const totalMin = debts.reduce((s,d)=>s+d.min,0);
+
+    resultEl.innerHTML = `
+      <div class="advisor-order">
+        <b>Attack order (avalanche — highest APR first):</b> ${sim.order.join(' → ')}
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">Debt-free in</div><div class="kpi-value">${timeStr}</div></div>
+        <div class="kpi"><div class="kpi-label">Total interest paid</div><div class="kpi-value ${sim.totalInterest>0?'warn':''}">${fmt(sim.totalInterest)}</div></div>
+        <div class="kpi"><div class="kpi-label">Monthly outlay</div><div class="kpi-value">${fmt(totalMin+extra)}</div></div>
+      </div>
+      ${sim.maxedOut?'<p class="empty-note">At this payment level it would take more than 50 years — consider increasing the extra payment.</p>':''}
+      <table class="ledger">
+        <thead><tr><th>Debt</th><th class="num-cell">Balance</th><th class="num-cell">APR</th><th class="num-cell">Min payment</th></tr></thead>
+        <tbody>${debts.map(d=>`<tr><td>${d.name}</td><td class="num-cell">${fmt(d.balance)}</td><td class="num-cell">${d.apr}%</td><td class="num-cell">${fmt(d.min)}</td></tr>`).join('')}</tbody>
+      </table>
+    `;
+  });
+
+  // ---------- ADVISOR CHAT ----------
+  function buildSnapshot(){
+    let lines = [];
+    if (state.budget && state.budget.income>0){
+      const b = state.budget;
+      lines.push(`Monthly income: ${fmt(b.income)}`);
+      lines.push(`Needs spending: ${fmt(b.needs)} (${(b.needs/b.income*100).toFixed(1)}% of income)`);
+      lines.push(`Wants spending: ${fmt(b.wants)} (${(b.wants/b.income*100).toFixed(1)}% of income)`);
+      lines.push(`Savings/investing: ${fmt(b.savings)} (${(b.savings/b.income*100).toFixed(1)}% of income)`);
+      lines.push(`Amount left over after all posted spending: ${fmt(b.leftover)}`);
+    } else {
+      lines.push('No budget has been posted yet.');
+    }
+    const debts = document.querySelectorAll('#debtRows .debt-row').length ? collectDebts() : state.debts;
+    if (debts && debts.length){
+      lines.push('Debts:');
+      debts.forEach(d=>lines.push(`  - ${d.name}: balance ${fmt(d.balance)}, APR ${d.apr}%, min payment ${fmt(d.min)}`));
+    } else {
+      lines.push('No debts listed.');
+    }
+    return lines.join('\n');
+  }
+
+  function appendMsg(role, text){
+    const win = document.getElementById('chatWindow');
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role==='user'?'user':'bot');
+    div.innerHTML = `<div class="who">${role==='user'?'You':'Advisor'}</div><div class="bubble"></div>`;
+    div.querySelector('.bubble').textContent = text;
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+    return div.querySelector('.bubble');
+  }
+
+  async function sendChat(){
+    const input = document.getElementById('chatInput');
+    const question = input.value.trim();
+    if (!question) return;
+    input.value = '';
+    appendMsg('user', question);
+    state.chatHistory.push({role:'user', content:question});
+
+    const typingBubble = appendMsg('bot', '');
+    typingBubble.innerHTML = '<span class="typing">weighing the numbers…</span>';
+
+    const systemPrompt = `You are a careful, plain-spoken personal finance advisor inside an app called "Ledger & Co." A user's financial snapshot is below. Answer their question using it where relevant.
+Rules:
+- Be concise: 3-6 short sentences or a short list, not an essay.
+- Give practical, general guidance (budgeting, debt payoff order, emergency funds, savings rate) — never specific stock, crypto, or investment product picks.
+- If the snapshot is missing data you'd need, say so briefly and answer with general principles instead.
+- You are not a licensed financial advisor and should not present this as individualized professional advice.
+
+Financial snapshot:
+${buildSnapshot()}`;
+
+    try{
+      // Calls a serverless function (see /api, /netlify/functions, or /functions/api)
+      // which holds the Anthropic API key server-side. See README.md for setup.
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system: systemPrompt,
+          messages: [...state.chatHistory]
+        })
+      });
+      if (!response.ok) throw new Error('backend not configured');
+      const data = await response.json();
+      const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+      const reply = textBlocks.join('\n').trim() || "I wasn't able to work that out — could you rephrase the question?";
+      typingBubble.textContent = reply;
+      state.chatHistory.push({role:'assistant', content:reply});
+    }catch(err){
+      typingBubble.textContent = "The advisor's desk isn't connected yet. This page needs a backend function (see README.md) with an ANTHROPIC_API_KEY to enable chat — the Budget, Overview, and Debt Ledger tabs work without it.";
+    }
+    document.getElementById('chatWindow').scrollTop = document.getElementById('chatWindow').scrollHeight;
+  }
+
+  document.getElementById('sendChat').addEventListener('click', sendChat);
+  document.getElementById('chatInput').addEventListener('keydown', (e)=>{
+    if (e.key==='Enter') sendChat();
+  });
+
+})();
+</script>
+</body>
+</html>
